@@ -3,7 +3,10 @@
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Config\Loader\LoaderInterface;
 
-class AppKernel extends Kernel
+/**
+ * AppKernel implementation with PHP 8.4 compatibility
+ */
+class AppKernel extends Kernel implements \Serializable
 {
     public function registerBundles()
     {
@@ -46,5 +49,24 @@ class AppKernel extends Kernel
     public function registerContainerConfiguration(LoaderInterface $loader)
     {
         $loader->load($this->getRootDir().'/config/config_'.$this->getEnvironment().'.yml');
+    }
+    
+    /**
+     * Serializable implementation for PHP 8.4 compatibility
+     */
+    public function serialize(): string
+    {
+        return serialize([
+            $this->environment,
+            $this->debug,
+        ]);
+    }
+    
+    /**
+     * Serializable implementation for PHP 8.4 compatibility
+     */
+    public function unserialize($data): void
+    {
+        [$this->environment, $this->debug] = unserialize($data);
     }
 }
