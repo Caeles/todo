@@ -405,7 +405,7 @@ class UserControllerTest extends WebTestCase
         
         $this->client->request('GET', '/users/' . $user->getId() . '/edit');
         $statusCode = $this->client->getResponse()->getStatusCode();
-        $this->assertContains($statusCode, [200, 302, 403, 404], 'Page d\'\u00e9dition devrait être accessible');
+        $this->assertContains($statusCode, [200, 302, 403, 404], 'Page d\'édition devrait être accessible');
         
         $this->entityManager->clear();
         $foundUser = $this->entityManager->getRepository(User::class)->find($user->getId());
@@ -440,8 +440,99 @@ class UserControllerTest extends WebTestCase
         
         $this->client->request('GET', '/users/' . $user->getId() . '/edit');
         $statusCode = $this->client->getResponse()->getStatusCode();
-        $this->assertNotEquals(500, $statusCode, 'Route d\'\u00e9dition ne devrait pas avoir d\'erreur serveur');
-        $this->assertContains($statusCode, [200, 302, 403, 404], 'Route d\'\u00e9dition devrait avoir un code de réponse valide');
+        $this->assertNotEquals(500, $statusCode, 'Route d\'édition ne devrait pas avoir d\'erreur serveur');
+        $this->assertContains($statusCode, [200, 302, 403, 404], 'Route d\'édition devrait avoir un code de réponse valide');
+    }
+
+    /**
+     * Test fonctionnel de création d'utilisateur 
+     */
+    public function testCompleteUserCreation(): void
+    {
+        // 1. Connexion en tant qu'admin 
+        $this->loginUser('admin', ['ROLE_ADMIN']);
+        
+        // 2. Accès au formulaire de création
+        $this->client->request('GET', '/users/create');
+        $this->assertResponseIsSuccessful('Le formulaire de création devrait être accessible');
+        $this->assertSelectorExists('form', 'Un formulaire devrait être présent sur la page');
+        
+        // 3. Comptage des utilisateurs avant création
+        $userCountBefore = $this->entityManager->getRepository(User::class)->count([]);
+        
+        // 4. Soumission du formulaire avec données valides
+        $this->client->submitForm('Ajouter', [
+            'user[username]' => 'testuser_complet',
+            'user[email]' => 'testcomplet@todolist.com',
+            'user[password][first]' => 'exemple',
+            'user[password][second]' => 'exemple',
+            'user[roles]' => 'ROLE_USER'
+        ]);
+        
+        // 5. Vérification de la redirection après création réussie
+        $this->assertResponseRedirects('/users');
+        
+        // 6. Vérification que l'utilisateur a bien été créé en base
+        $this->entityManager->clear(); 
+        
+        $userCountAfter = $this->entityManager->getRepository(User::class)->count([]);
+        $this->assertEquals($userCountBefore + 1, $userCountAfter, 'Un nouvel utilisateur devrait avoir été créé');
+        
+        // 7. Vérification des données de l'utilisateur créé
+        $createdUser = $this->entityManager->getRepository(User::class)
+            ->findOneBy(['username' => 'testuser_complet']);
+        
+        $this->assertNotNull($createdUser, 'L\'utilisateur créé devrait exister en base');
+        $this->assertEquals('testuser_complet', $createdUser->getUsername());
+        $this->assertEquals('testcomplet@todolist.com', $createdUser->getEmail());
+        $this->assertContains('ROLE_USER', $createdUser->getRoles());
+        
+        // 8. Vérification du hachage du mot de passe
+        $this->assertNotEquals('motdepasse123', $createdUser->getPassword(), 
+            'Le mot de passe ne devrait pas être lisible');
+        $this->assertNotEmpty($createdUser->getPassword(), 
+            'Le mot de passe haché ne devrait pas être vide');
+        
+        // 9. Vérification du message de succès
+        $this->client->followRedirect();
+        $this->assertSelectorTextContains('.alert-success, .flash-success', 
+            'L\'utilisateur a bien été ajouté', 
+            'Un message de succès devrait être affiché');
+    }
+
+    /**
+     * Test de création avec des mots de passe différents
+     */
+    public function testUserCreationWithInvalidData(): void
+    {
+        $this->loginUser('admin', ['ROLE_ADMIN']);
+        
+        $this->client->request('GET', '/users/create');
+        $this->assertResponseIsSuccessful();
+        
+        // Comptage des utilisateurs avant tentative
+        $userCountBefore = $this->entityManager->getRepository(User::class)->count([]);
+        
+        // Soumission de mots de passe différents
+        $this->client->submitForm('Ajouter', [
+            'user[username]' => 'testuser_echec',
+            'user[email]' => 'echec@todolist.com',
+            'user[password][first]' => 'motdepasse123',
+            'user[password][second]' => 'motdepasse456', 
+            'user[roles]' => 'ROLE_USER'
+        ]);
+        
+        // Pas de redirection
+        $this->assertResponseStatusCodeSame(200, 'Devrait rester sur le formulaire en cas d\'erreur');
+        
+        // Vérification qu'aucun utilisateur n'a été créé
+        $this->entityManager->clear();
+        $userCountAfter = $this->entityManager->getRepository(User::class)->count([]);
+        $this->assertEquals($userCountBefore, $userCountAfter, 'Aucun utilisateur ne devrait être créé avec des données invalides');
+        
+        // Vérification de la présence d'erreurs de validation
+        $this->assertSelectorExists('.form-error, .invalid-feedback', 
+            'Des erreurs de validation devraient être affichées');
     }
 
     // Test de l'entité User
