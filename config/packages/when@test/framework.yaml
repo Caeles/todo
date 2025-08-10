@@ -1,0 +1,9 @@
+framework:
+    test: true
+    session:
+        handler_id: session.handler.native_file
+        save_path: '%kernel.cache_dir%/sessions'
+        cookie_secure: false
+        cookie_httponly: false
+    profiler:
+        enabled: false

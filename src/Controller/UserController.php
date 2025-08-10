@@ -10,10 +10,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class UserController extends AbstractController
 {
     #[Route('/users', name: 'user_list')]
+    #[IsGranted('ROLE_ADMIN')]
     public function list(EntityManagerInterface $entityManager): Response
     {
         $users = $entityManager->getRepository(User::class)->findAll();
@@ -21,6 +23,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/users/create', name: 'user_create')]
+    #[IsGranted('ROLE_ADMIN')]
     public function create(Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher): Response
     {
         $user = new User();
@@ -29,7 +32,10 @@ class UserController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Utilisation de UserPasswordHasherInterface au lieu de security.password_encoder
+            $selectedRole = $form->get('roles')->getData();
+            
+            $user->setRoles([$selectedRole]);
+            
             $password = $passwordHasher->hashPassword($user, $user->getPassword());
             $user->setPassword($password);
 
@@ -45,6 +51,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/users/{id}/edit', name: 'user_edit')]
+    #[IsGranted('ROLE_ADMIN')]
     public function edit(User $user, Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher): Response
     {
         $form = $this->createForm(UserType::class, $user);
@@ -52,9 +59,18 @@ class UserController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Utilisation de UserPasswordHasherInterface au lieu de security.password_encoder
-            $password = $passwordHasher->hashPassword($user, $user->getPassword());
-            $user->setPassword($password);
+            $selectedRole = $form->get('roles')->getData();
+            
+            $user->setRoles([$selectedRole]);
+            
+            $newPassword = $form->get('password')->getData();
+            $newPassword = $form->get('password')->getData();
+            
+            if (!empty($newPassword)) {
+                $password = $passwordHasher->hashPassword($user, $newPassword);
+                $user->setPassword($password);
+            }
+
 
             $entityManager->flush();
 

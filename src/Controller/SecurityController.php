@@ -12,10 +12,8 @@ class SecurityController extends AbstractController
     #[Route('/login', name: 'login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
-        // Récupération de l'erreur de connexion s'il y en a une
         $error = $authenticationUtils->getLastAuthenticationError();
         
-        // Dernier nom d'utilisateur saisi
         $lastUsername = $authenticationUtils->getLastUsername();
 
         return $this->render('security/login.html.twig', [
@@ -25,14 +23,14 @@ class SecurityController extends AbstractController
     }
 
     #[Route('/login_check', name: 'login_check')]
-    public function loginCheck(): void
+    public function loginCheck(): Response
     {
-        // Ce code n'est jamais exécuté.
+        throw new \LogicException('This code should never be reached');
     }
 
-    #[Route('/logout', name: 'logout')]
-    public function logout(): void
+    #[Route('/logout', name: 'app_logout')]
+    public function logout(): Response
     {
-        // Ce code n'est jamais exécuté.
+        throw new \LogicException('This code should never be reached');
     }
 }

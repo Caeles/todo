@@ -3,6 +3,7 @@
 {% block header_img %}<img class="slide-image" src="{{ asset('img/todolist_content.jpg') }}" alt="todo list">{% endblock %}
 
 {% block body %}
+    <h1>Liste des tâches</h1>
     <a href="{{ path('task_create') }}" class="btn btn-info pull-right">Créer une tâche</a>
     <div class="row">
         {% for task in tasks %}
@@ -14,9 +15,14 @@
                     </h4>
                     <h4><a href="{{ path('task_edit', {'id' : task.id }) }}">{{ task.title }}</a></h4>
                     <p>{{ task.content }}</p>
+                    {% if task.user %}
+                        <p><strong>Créé par :</strong> {{ task.user.username }}</p>
+                    {% else %}
+                        <p><strong>Créé par :</strong> <em>Utilisateur inconnu</em></p>
+                    {% endif %}
                 </div>
                 <div>
-                    <form action="{{ path('task_toggle', {'id' : task.id }) }}" method="post">
+                    <form action="{{ path('task_validate', {'id' : task.id }) }}" method="post">
                         <button class="btn btn-success btn-sm pull-right">
                             {% if not task.isDone %}Marquer comme faite{% else %}Marquer non terminée{% endif %}
                         </button>

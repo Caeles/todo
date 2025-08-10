@@ -1,0 +1,6 @@
+when@dev: &dev
+    zenstruck_foundry:
+        auto_refresh_proxies: true
+        faker:
+            locale: fr_FR
+when@test: *dev

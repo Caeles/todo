@@ -15,7 +15,7 @@ class TaskController extends AbstractController
     #[Route('/tasks', name: 'task_list')]
     public function list(EntityManagerInterface $entityManager): Response
     {
-        $tasks = $entityManager->getRepository(Task::class)->findAll();
+        $tasks = $entityManager->getRepository(Task::class)->findBy(['user' => $this->getUser()]);
         return $this->render('task/list.html.twig', ['tasks' => $tasks]);
     }
 
@@ -28,6 +28,8 @@ class TaskController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $task->setUser($this->getUser());
+            
             $entityManager->persist($task);
             $entityManager->flush();
 
@@ -42,11 +44,16 @@ class TaskController extends AbstractController
     #[Route('/tasks/{id}/edit', name: 'task_edit')]
     public function edit(Task $task, Request $request, EntityManagerInterface $entityManager): Response
     {
+        $originalUser = $task->getUser();
+        
         $form = $this->createForm(TaskType::class, $task);
-
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            if ($task->getUser() !== $originalUser) {
+                $task->setUser($originalUser);
+            }
+            
             $entityManager->flush();
 
             $this->addFlash('success', 'La tâche a bien été modifiée.');
@@ -60,7 +67,7 @@ class TaskController extends AbstractController
         ]);
     }
 
-    #[Route('/tasks/{id}/toggle', name: 'task_toggle')]
+    #[Route('/tasks/{id}/validate', name: 'task_validate')]
     public function toggleTask(Task $task, EntityManagerInterface $entityManager): Response
     {
         $task->toggle(!$task->isDone());
