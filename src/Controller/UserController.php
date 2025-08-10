@@ -35,9 +35,11 @@ class UserController extends AbstractController
             $selectedRole = $form->get('roles')->getData();
             
             $user->setRoles([$selectedRole]);
-            
-            $password = $passwordHasher->hashPassword($user, $user->getPassword());
-            $user->setPassword($password);
+            $plainPassword = $form->get('password')->getData();
+            if (!empty($plainPassword)) {
+                $hashed = $passwordHasher->hashPassword($user, $plainPassword);
+                $user->setPassword($hashed);
+            }
 
             $entityManager->persist($user);
             $entityManager->flush();
@@ -64,11 +66,9 @@ class UserController extends AbstractController
             $user->setRoles([$selectedRole]);
             
             $newPassword = $form->get('password')->getData();
-            $newPassword = $form->get('password')->getData();
-            
             if (!empty($newPassword)) {
-                $password = $passwordHasher->hashPassword($user, $newPassword);
-                $user->setPassword($password);
+                $hashed = $passwordHasher->hashPassword($user, $newPassword);
+                $user->setPassword($hashed);
             }
 
 

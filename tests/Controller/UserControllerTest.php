@@ -251,10 +251,12 @@ class UserControllerTest extends WebTestCase
             $this->assertContains($status, [200, 302, 403, 500]);
             if ($status === 302) {
                 $this->assertResponseRedirects('/users');
-                $this->entityManager->refresh($user);
-                $this->assertEquals('usermodifie', $user->getUsername());
-                $this->assertEquals('modifie@example.com', $user->getEmail());
-                $this->assertContains('ROLE_ADMIN', $user->getRoles());
+                $this->entityManager->clear();
+                $reloaded = $this->entityManager->getRepository(User::class)->find($user->getId());
+                $this->assertNotNull($reloaded);
+                $this->assertEquals('usermodifie', $reloaded->getUsername());
+                $this->assertEquals('modifie@example.com', $reloaded->getEmail());
+                $this->assertContains('ROLE_ADMIN', $reloaded->getRoles());
             }
         } else {
             $this->assertContains($this->client->getResponse()->getStatusCode(), [200, 302, 403, 404, 500]);

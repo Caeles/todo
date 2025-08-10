@@ -3,6 +3,7 @@
 namespace App\Factory;
 
 use App\Entity\Task;
+use App\Factory\UserFactory;
 use App\Repository\TaskRepository;
 use Zenstruck\Foundry\ModelFactory;
 use Zenstruck\Foundry\Proxy;
@@ -57,6 +58,9 @@ final class TaskFactory extends ModelFactory
         return $this
             ->afterInstantiate(function(Task $task): void {
                 $task->toggle(self::faker()->boolean(20));
+                if (null === $task->getUser()) {
+                    $task->setUser(UserFactory::randomOrCreate()->object());
+                }
             })
         ;
     }

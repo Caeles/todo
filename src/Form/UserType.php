@@ -24,7 +24,8 @@ class UserType extends AbstractType
             ->add('password', RepeatedType::class, [
                 'type' => PasswordType::class,
                 'invalid_message' => 'Les deux mots de passe doivent correspondre.',
-                'required' => !$isEdit, 
+                'required' => !$isEdit,
+                'mapped' => false,
                 'first_options'  => [
                     'label' => $isEdit ? 'Nouveau mot de passe (optionnel)' : 'Mot de passe',
                     'attr' => $isEdit ? ['placeholder' => 'Laissez vide pour conserver le mot de passe actuel'] : []

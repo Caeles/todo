@@ -358,7 +358,10 @@ class EntitiesFormsTest extends TypeTestCase
         $this->assertTrue($form->isSynchronized());
 
         $this->assertSame('newuser', $user->getUsername());
-        $this->assertSame('newpassword', $user->getPassword());
+        // Le champ password est unmapped dans UserType: il ne doit pas setter l'entité directement
+        $this->assertNull($user->getPassword());
+        // La valeur plain password est bien présente dans le formulaire
+        $this->assertSame('newpassword', $form->get('password')->getData());
         $this->assertSame('newuser@example.com', $user->getEmail());
     }
 
