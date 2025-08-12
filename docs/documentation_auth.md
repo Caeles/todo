@@ -1,12 +1,9 @@
 # Documentation technique – Authentification 
 
 ## I. Prérequis & dépendances
-- **PHP** : 8.4.x (testé sur 8.4.8)  
+- **PHP** : 8.4
 - **Composer**  
-- **Symfony CLI**  
-- **Extensions PHP** :  
-  - `pdo_mysql` (prod/dev) ou `pdo_sqlite` (tests)  
-  - `intl`, `mbstring`, `json`  
+- **Symfony CLI**   
 - **Xdebug** (pour profilage/couverture)  
 
 ---
@@ -24,7 +21,7 @@ composer install
 ```
 
 ### II.3 Configurer l’environnement
-1. Copier le fichier `.env` en `.env.local`.  
+1. Copier le fichier `.env` et le placer dans le fichier `.env.local`.  
 2. Configurer la variable `DATABASE_URL` selon votre environnement :  
    ```env
    DATABASE_URL=mysql://username:password@127.0.0.1:3306/todolist
@@ -79,7 +76,7 @@ L’application utilise le composant **Security** de Symfony basé sur :
 - Sessions  
 - Rôles :  
   - `ROLE_USER` : accès aux tâches (`/tasks`) et à la page d’accueil (`/`)  
-  - `ROLE_ADMIN` : accès à la gestion des utilisateurs (`/users`)  
+  - `ROLE_ADMIN` : accès à la création d'utilisateurs (`/users/create`) et à la gestion des utilisateurs (`/users`)  
 
 **Extrait `security.yaml` :**
 ```yaml
@@ -112,27 +109,18 @@ security:
                 target: login
 
     access_control:
-        - { path: ^/login$, roles: PUBLIC_ACCESS }
+        - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/register, roles: PUBLIC_ACCESS }
-        - { path: ^/users/create, roles: PUBLIC_ACCESS }
+        - { path: ^/users/create, roles:ROLE_ADMIN }
         - { path: ^/users, roles: ROLE_ADMIN }
         - { path: ^/tasks, roles: ROLE_USER }
-        - { path: ^/$, roles: ROLE_USER }
         - { path: ^/, roles: PUBLIC_ACCESS }
 
-when@test:
-    security:
-        password_hashers:
-            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
-                algorithm: auto
-                cost: 4
-                time_cost: 3
-                memory_cost: 10
-```
+
 
 **Points importants :**
 - Authentification par **username**  
-- Redirection après connexion : `/tasks` (`task_list`)  
+- Redirection après connexion : `/tasks`
 - Accès `/users` réservé aux `ROLE_ADMIN`  
 - `/tasks` et `/` nécessitent `ROLE_USER`  
 
@@ -146,11 +134,7 @@ when@test:
 - `password` : string(64), hashé  
 - `roles` : json, par défaut `['ROLE_USER']`  
 - `tasks` : `OneToMany` vers `Task`  
-
-**Méthodes clés :**
-- `getUserIdentifier()` → username  
-- `getRoles()` → inclut toujours `ROLE_USER`  
-- `eraseCredentials()` → vide par défaut  
+ 
 
 ---
 
@@ -161,7 +145,7 @@ when@test:
    - Création d’une session  
    - Redirection vers `/tasks`  
 4. En cas d’erreur :  
-   - Formulaire réaffiché avec un message  
+   - Formulaire réaffiché avec une indication liée à l'erreur  
 
 **Formulaire (`login.html.twig`) :**
 - Champs : `_username`, `_password`  
@@ -193,8 +177,8 @@ Basées sur `src/Controller/UserController.php` :
 - **Édition** : `GET|POST /users/{id}/edit` → `user_edit`  
   - Accès : `ROLE_ADMIN`  
   - GET : formulaire pré-rempli  
-  - POST : mise à jour du rôle, hash nouveau mot de passe si fourni  
+  - POST : mise à jour du rôle, hash du nouveau mot de passe si fourni  
 
 ---
 
-**Dernière mise à jour** : 2025-08-09
+**Dernière mise à jour** : 2025-08-11
