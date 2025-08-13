@@ -444,9 +444,8 @@ class UserControllerTest extends WebTestCase
         $this->assertContains($statusCode, [200, 302, 403, 404], 'Route d\'édition devrait avoir un code de réponse valide');
     }
 
-    /**
-     * Test fonctionnel de création d'utilisateur 
-     */
+    /* Test fonctionnel pour la création d'utilisateur */
+
     public function testCompleteUserCreation(): void
     {
         // 1. Connexion en tant qu'admin 
@@ -576,5 +575,76 @@ class UserControllerTest extends WebTestCase
         $user = new User();
         
         $this->assertNull($user->getSalt());
+    }
+
+    /* Test d'accès à la création d'utilisateur par les administrateurs uniquement*/
+
+    public function testAccessRestrictionForUserCreation(): void
+    {
+        $this->client->request('GET', '/users/create');
+        $this->assertResponseRedirects();
+
+        $regularUser = $this->loginUser('normaluser', ['ROLE_USER']);
+        $this->client->request('GET', '/users/create');
+        $this->assertResponseStatusCodeSame(403, 'Un utilisateur avec ROLE_USER ne doit pas pouvoir accéder à la création d\'utilisateurs');
+
+        $this->cleanDatabase();
+        $adminUser = $this->loginUser('adminuser', ['ROLE_ADMIN']);
+        $this->client->request('GET', '/users/create');
+        $this->assertResponseIsSuccessful('Un utilisateur avec ROLE_ADMIN doit pouvoir accéder à la création d\'utilisateurs');
+        $this->assertSelectorExists('form', 'Le formulaire de création doit être présent pour un admin');
+
+        $userCountBefore = $this->entityManager->getRepository(User::class)->count([]);
+        $this->client->submitForm('Ajouter', [
+            'user[username]' => 'user_test',
+            'user[email]' => 'user_test@todolist.com',
+            'user[password][first]' => '123motdepasse',
+            'user[password][second]' => '123motdepasse',
+            'user[roles]' => 'ROLE_USER'
+        ]);
+
+        $this->assertResponseRedirects('/users');
+        
+        $this->entityManager->clear();
+        $userCountAfter = $this->entityManager->getRepository(User::class)->count([]);
+        $this->assertEquals($userCountBefore + 1, $userCountAfter, 'Les nouveaux utilisateurs doivent être créés par l\'admin');
+        
+        $createdUser = $this->entityManager->getRepository(User::class)->findOneBy(['username' => 'user_test']);
+        $this->assertNotNull($createdUser, 'L\'utilisateur créé par l\'admin doit avoir été enregistré en base');
+        $this->assertEquals('user_test@todolist.com', $createdUser->getEmail());
+    }
+
+
+    public function testUserRoutesAdmin(): void
+    {
+        $testUser = $this->createTestUser('edittestuser', 'edit@todolist.com', ['ROLE_USER']);
+        $userId = $testUser->getId();
+
+        $regularUser = $this->loginUser('normaluser', ['ROLE_USER']);
+        
+        $this->client->request('GET', '/users');
+        $this->assertResponseStatusCodeSame(403, 'Le listing des utilisateurs doit être interdit aux ROLE_USER');
+        
+        $this->client->request('GET', '/users/create');
+        $this->assertResponseStatusCodeSame(403, 'La création d\'utilisateur doit être interdite aux ROLE_USER');
+        
+        $this->client->request('GET', "/users/{$userId}/edit");
+        $this->assertResponseStatusCodeSame(403, 'L\'édition d\'utilisateur doit être interdite aux ROLE_USER');
+
+        $this->cleanDatabase();
+        $testUser = $this->createTestUser('edituser2', 'edit2@todolist.com', ['ROLE_USER']);
+        $userId = $testUser->getId();
+        
+        $adminUser = $this->loginUser('adminuser', ['ROLE_ADMIN']);
+        
+        $this->client->request('GET', '/users');
+        $this->client->request('GET', '/users');
+        $this->assertResponseIsSuccessful('La liste des utilisateurs doit être accessible aux ROLE_ADMIN');
+        
+        $this->client->request('GET', '/users/create');
+        $this->assertResponseIsSuccessful('La création d\'utilisateur doit être accessible aux ROLE_ADMIN');
+        
+        $this->client->request('GET', "/users/{$userId}/edit");
+        $this->assertResponseIsSuccessful('L\'édition d\'utilisateur doit être accessible aux ROLE_ADMIN');
     }
 }

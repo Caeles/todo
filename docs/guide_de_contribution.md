@@ -53,6 +53,7 @@ git commit -m "fix: correction bug suppression tâche anonyme"
 ```
 Types utilisés :
 - feature: ajout d'une nouvelle fonctionnalité
+- enhancement: amélioration d'une fonctionnalité
 - fix: correction de bug
 - doc: documentation
 - test: ajout/modification de tests
