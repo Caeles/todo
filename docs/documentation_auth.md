@@ -83,7 +83,7 @@ L’application utilise le composant **Security** de Symfony basé sur :
 - Sessions  
 - Rôles :  
   - `ROLE_USER` : accès aux tâches (`/tasks`) et à la page d’accueil (`/`)  
-  - `ROLE_ADMIN` : accès à la création d'utilisateurs (`/users/create`) et à la gestion des utilisateurs (`/users`)  
+  - `ROLE_ADMIN` : accès à la création d'utilisateurs (`/users/create`) et au listin utilisateurs (`/users`)  
 
 **Extrait `security.yaml` :**
 ```yaml
@@ -116,12 +116,14 @@ security:
                 target: login
 
     access_control:
-        - { path: ^/login, roles: PUBLIC_ACCESS }
-        - { path: ^/register, roles: PUBLIC_ACCESS }
-        - { path: ^/users/create, roles:ROLE_ADMIN }
+access_control:
+        - { path: ^/login$, roles: PUBLIC_ACCESS }
+        - { path: ^/register, roles: ROLE_ADMIN}
+        - { path: ^/users/create, roles: ROLE_ADMIN }
         - { path: ^/users, roles: ROLE_ADMIN }
         - { path: ^/tasks, roles: ROLE_USER }
-        - { path: ^/, roles: PUBLIC_ACCESS }
+        - { path: ^/$, roles: ROLE_USER }
+
 
 
 
