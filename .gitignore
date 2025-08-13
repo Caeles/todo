@@ -22,3 +22,4 @@ tests/.DS_Store
 
 # Paramètres
 /config/parameters.yaml
+coverage/
