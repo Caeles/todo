@@ -116,7 +116,6 @@ security:
                 target: login
 
     access_control:
-access_control:
         - { path: ^/login$, roles: PUBLIC_ACCESS }
         - { path: ^/register, roles: ROLE_ADMIN}
         - { path: ^/users/create, roles: ROLE_ADMIN }
