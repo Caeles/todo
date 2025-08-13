@@ -61,6 +61,13 @@ Pour vous connecter avec un compte :
 
 ---
 
+## IV. Accès Utilisateur
+Pour vous connecter avec un compte :  
+- **Utilisateur** : `usertest`  
+- **Mot de passe** : `user`
+
+---
+
 ## IV. Structure & fichiers clés
 - Config sécurité : `config/packages/security.yaml`  
 - Contrôleur sécurité : `src/Controller/SecurityController.php`  
