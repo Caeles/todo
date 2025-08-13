@@ -584,12 +584,12 @@ class UserControllerTest extends WebTestCase
         $this->client->request('GET', '/users/create');
         $this->assertResponseRedirects();
 
-        $regularUser = $this->loginUser('normaluser', ['ROLE_USER']);
+        $this->loginUser('normaluser', ['ROLE_USER']);
         $this->client->request('GET', '/users/create');
         $this->assertResponseStatusCodeSame(403, 'Un utilisateur avec ROLE_USER ne doit pas pouvoir accéder à la création d\'utilisateurs');
 
         $this->cleanDatabase();
-        $adminUser = $this->loginUser('adminuser', ['ROLE_ADMIN']);
+        $this->loginUser('adminuser', ['ROLE_ADMIN']);
         $this->client->request('GET', '/users/create');
         $this->assertResponseIsSuccessful('Un utilisateur avec ROLE_ADMIN doit pouvoir accéder à la création d\'utilisateurs');
         $this->assertSelectorExists('form', 'Le formulaire de création doit être présent pour un admin');
