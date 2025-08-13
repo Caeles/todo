@@ -29,6 +29,7 @@ class UserVoter extends Voter
             return false;
         }
 
+        // Le paramètre $subject n'est pas utilisé car les permissions User sont basées uniquement sur les rôles
         switch ($attribute) {
             case self::LIST:
                 return $this->canList($user);

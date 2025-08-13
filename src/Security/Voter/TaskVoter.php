@@ -31,7 +31,7 @@ class TaskVoter extends Voter
 
         switch ($attribute) {
             case self::CREATE:
-                return $this->canCreate($user);
+                return $this->canCreate();
             case self::VIEW:
                 return $this->canView($subject, $user);
             case self::EDIT:
@@ -45,7 +45,7 @@ class TaskVoter extends Voter
         return false;
     }
 
-    private function canCreate(UserInterface $user): bool
+    private function canCreate(): bool
     {
         return true;
     }
